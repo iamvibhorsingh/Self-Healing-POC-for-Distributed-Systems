@@ -2,7 +2,7 @@
 
 This project is a prototype of a simple AI-driven "self-healing" system capable of autonomously detecting anomalies in simulated system telemetry and triggering predefined recovery actions. It demonstrates a proactive approach to operational excellence, reducing Mean Time To Recovery (MTTR) and minimizing human intervention in the face of common infrastructure failures.
 
-![alt text](https://github.com/iamvibhorsingh/Self-Healing-POC-for-Distributed-Systems/poc_running.png "Picture of project running")
+![alt text](https://github.com/iamvibhorsingh/Self-Healing-POC-for-Distributed-Systems/blob/master/poc_running.png "Picture of project running")
 
 ## Architecture
 
