@@ -61,7 +61,6 @@ def process_message(message, r):
 
         df = s_data["df"]
 
-        # --- IMPROVED TRAINING LOGIC ---
         # Train the model only once when enough data is collected.
         if s_data["model"] is None and len(df) >= MIN_DATA_FOR_TRAINING:
             print(f"Collected enough data ({len(df)} points). Training initial model for {service_name}...")

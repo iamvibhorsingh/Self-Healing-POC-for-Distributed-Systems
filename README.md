@@ -1,6 +1,6 @@
-# AIOps Heal: An AI-Driven Self-Healing Prototype
+# Self-Healing-POC-for-Distributed-Systems
 
-This project is a prototype of an AI-driven "self-healing" system capable of autonomously detecting anomalies in simulated system telemetry and triggering predefined recovery actions. It demonstrates a proactive approach to operational excellence, reducing Mean Time To Recovery (MTTR) and minimizing human intervention in the face of common infrastructure failures.
+This project is a prototype of a simple AI-driven "self-healing" system capable of autonomously detecting anomalies in simulated system telemetry and triggering predefined recovery actions. It demonstrates a proactive approach to operational excellence, reducing Mean Time To Recovery (MTTR) and minimizing human intervention in the face of common infrastructure failures.
 
 ## Architecture
 
@@ -42,16 +42,16 @@ graph TD
 ### Running the System
 
 1.  Clone the repository.
-2.  Navigate to the `AIOPS_HEAL` directory.
+2.  Navigate to the `Self-Healing-POC-for-Distributed-Systems` directory.
 3.  Run the following command to build and start all services:
     ```bash
     docker-compose up --build
     ```
-4.  Open a web browser and go to `http://localhost:8501` to view the dashboard.
+4.  Open a web browser and go to `http://localhost:8501` (streamlit) to view the dashboard.
 
 ## Technical Choices
 
--   **Python**: For its rich data science and machine learning ecosystem.
+-   **Python**: For its simplicity.
 -   **Scikit-learn**: For the `IsolationForest` anomaly detection model.
 -   **Streamlit**: For rapid development of the interactive dashboard.
 -   **Redis**: For lightweight and fast inter-service communication.

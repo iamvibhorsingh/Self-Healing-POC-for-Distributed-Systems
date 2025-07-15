@@ -88,7 +88,7 @@ def main():
                   markers=False)
     
     # --- Improve Readability ---
-    fig.update_traces(line=dict(width=3)) # Make lines thicker
+    fig.update_traces(line=dict(width=3))
 
     # Add anomaly markers
     if not df_anomalies.empty:
@@ -102,8 +102,8 @@ def main():
     # --- Recent Actions Log ---
     st.subheader("Recent Self-Healing Actions")
     
-    actions_placeholder = st.empty() # Create a placeholder
-
+    actions_placeholder = st.empty()
+    
     df_actions = pd.DataFrame(actions_data)
     
     if not df_actions.empty:
