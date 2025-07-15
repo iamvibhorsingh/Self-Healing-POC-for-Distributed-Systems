@@ -27,11 +27,11 @@ graph TD
         R -->|All Data| D[Dashboard]
     end
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#f9f,stroke:#333,stroke-width:2px
-    style C fill:#f9f,stroke:#333,stroke-width:2px
-    style D fill:#ccf,stroke:#333,stroke-width:2px
-    style R fill:#f99,stroke:#333,stroke-width:2px
+    style A fill:lightcoral,stroke:#000,stroke-width:2px
+    style B fill:lightblue,stroke:#000,stroke-width:2px
+    style C fill:lightgreen,stroke:#000,stroke-width:2px
+    style D fill:gold,stroke:#000,stroke-width:2px
+    style R fill:salmon,stroke:#000,stroke-width:2px
 ```
 
 ## Getting Started
