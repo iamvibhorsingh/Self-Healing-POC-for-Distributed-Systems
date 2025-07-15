@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  telemetry-generator:
+    build: .
+    command: python telemetry_generator.py
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    restart: on-failure
+
+  anomaly-detector:
+    build: .
+    command: python anomaly_detector.py
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    restart: on-failure
+
+  self-healing-orchestrator:
+    build: .
+    command: python self_healing_orchestrator.py
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    restart: on-failure
+
+  dashboard:
+    build: .
+    command: streamlit run dashboard.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    restart: on-failure
+
+volumes:
+  redis_data: 
