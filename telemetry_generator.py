@@ -18,8 +18,7 @@ DEPENDENCY_MAP = {
 }
 
 # --- Anomaly State ---
-# Refactored to be a dictionary, with one entry per service.
-# This allows for concurrent anomalies on different services.
+# A dictionary, with one entry per service.
 anomaly_states = {
     service: {"type": None, "duration": 0, "original_value": 0, "steps": 0}
     for service in SERVICES
@@ -31,11 +30,9 @@ service_impairments = {
 }
 
 def get_redis_connection():
-    """Establishes a connection to Redis."""
     return redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 def generate_normal_telemetry(service_name):
-    """Generates normal telemetry data for a given service."""
     return {
         "service_name": service_name,
         "timestamp": time.time(),
@@ -47,7 +44,6 @@ def generate_normal_telemetry(service_name):
     }
 
 def inject_anomaly(data):
-    """Injects an anomaly into the telemetry data based on the current state."""
     service_name = data["service_name"]
     state = anomaly_states[service_name]
 
@@ -78,11 +74,9 @@ def inject_anomaly(data):
     return False
 
 def start_new_anomalies():
-    """Randomly starts a new anomaly for any service that is currently normal."""
     for service in SERVICES:
         state = anomaly_states[service]
-        # If the service is normal, there's a small chance of starting an anomaly
-        if state["type"] is None and random.random() < 0.05: # 5% chance each cycle per service
+        if state["type"] is None and random.random() < 0.05: # 5% chance of starting anomaly each cycle per service
             anomaly_type = random.choice(["cpu_spike", "memory_leak", "high_errors", "network_spike", "request_spike"])
             
             state["type"] = anomaly_type
@@ -106,7 +100,6 @@ def start_new_anomalies():
             print(f"INFO: Starting anomaly '{anomaly_type}' on {service} for {state['duration']} cycles.")
 
 def check_for_state_commands(r):
-    """Does a non-blocking check for new commands from the orchestrator."""
     messages = r.xread({STATE_STREAM: "$"}, count=10, block=1)
     if messages:
         for stream, msgs in messages:
@@ -125,7 +118,6 @@ def check_for_state_commands(r):
                     print(f"Error processing state command: {e}")
 
 def propagate_cascading_failures():
-    """Simulates cascading failures based on the dependency map."""
     for downstream, upstream in DEPENDENCY_MAP.items():
         upstream_state = anomaly_states[upstream]
         downstream_state = anomaly_states[downstream]
@@ -139,7 +131,6 @@ def propagate_cascading_failures():
             downstream_state["steps"] = 1 # To satisfy the logic in inject_anomaly
 
 def main():
-    """Main function to generate and publish telemetry."""
     r = get_redis_connection()
     print("Telemetry generator started. Connecting to Redis...")
     r.ping()
@@ -177,7 +168,7 @@ def main():
             is_anomalous = inject_anomaly(data)
             data["is_anomalous"] = is_anomalous 
 
-            # 2. Apply impairment state SECOND (as the final override)
+            # 2. Apply impairment state SECOND
             if impairment["state"] == "REROUTING":
                 # Service is rerouted, so its metrics should look unusually healthy
                 data["cpu_utilization"] *= 0.5
@@ -189,7 +180,6 @@ def main():
                 data["memory_usage"] *= load_factor
                 data["request_count"] *= int(load_factor * 1.5)
 
-            # Publish to Redis Stream
             r.xadd(STREAM_NAME, {"data": json.dumps(data)})
             print(f"Published: {data}")
 

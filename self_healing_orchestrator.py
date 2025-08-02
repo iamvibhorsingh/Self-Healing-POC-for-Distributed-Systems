@@ -9,10 +9,10 @@ REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 INPUT_STREAM = "anomaly-alerts"
 OUTPUT_STREAM = "healing-actions"
-STATE_STREAM = "system-state-stream" # New stream for state changes
+STATE_STREAM = "system-state-stream" # Stream for state changes
 CONSUMER_GROUP = "orchestration-group"
 CONSUMER_NAME = "orchestrator-1"
-ACTION_COOLDOWN_SECONDS = 30 # Cooldown period of 2 minutes for each service
+ACTION_COOLDOWN_SECONDS = 30 # Cooldown period for each service
 DEPENDENCY_MAP = {
     "service-c": "service-a",
     "service-d": "service-a"
@@ -20,7 +20,7 @@ DEPENDENCY_MAP = {
 RECENT_ANOMALY_WINDOW_SECONDS = 5 # How long to consider an anomaly "active" for correlation
 
 # --- State ---
-# A more sophisticated state machine to track the healing lifecycle
+# A sophisticated state machine to track the healing lifecycle
 service_states = {
     service: {"state": "HEALTHY", "last_action_time": 0, "last_action": None, "verification_time": 0}
     for service in ["service-a", "service-b", "service-c", "service-d"]
@@ -29,11 +29,9 @@ recent_anomalies = {}
 
 
 def get_redis_connection():
-    """Establishes a connection to Redis."""
     return redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 def initialize_stream_and_group(r):
-    """Creates the consumer group for the anomaly alerts stream."""
     try:
         r.xgroup_create(INPUT_STREAM, CONSUMER_GROUP, id="0", mkstream=True)
         print(f"Consumer group '{CONSUMER_GROUP}' created for stream '{INPUT_STREAM}'.")
@@ -48,7 +46,6 @@ def decide_action(alert):
     service_name = alert.get("service_name")
     metrics = alert.get("metrics", {})
     
-    # The function now returns a tuple: (action_string, state_command_or_None)
     if metrics.get("cpu_utilization", 0) > 70:
         return f"Restarting pod for {service_name} due to high CPU.", None
     elif metrics.get("memory_usage", 0) > 1200:
@@ -65,7 +62,6 @@ def decide_action(alert):
     return f"No specific action defined. Monitoring {service_name} closely.", None
 
 def process_alert(alert_data, r):
-    """Processes a single anomaly alert and triggers an action."""
     global service_states
     try:
         alert = json.loads(alert_data["alert"])
@@ -74,10 +70,8 @@ def process_alert(alert_data, r):
 
         print(f"Received alert: {alert}")
         
-        # Decide on an action and potential state command
         action_string, state_command = decide_action(alert)
         
-        # Publish state command if one exists
         if state_command:
             r.xadd(STATE_STREAM, {"command": json.dumps(state_command)})
             print(f"[STATE CHANGE] Issued command: {state_command}")
@@ -111,13 +105,13 @@ def verify_actions(r):
         if s_state["state"] == "VERIFYING_FIX" and current_time >= s_state["verification_time"]:
             # Check Redis for the latest anomaly for this service
             if service in recent_anomalies and current_time - recent_anomalies[service] < 45:
-                # Failure condition: Anomaly is still active after the action
+                # Failure: Anomaly is still active after the action
                 print(f"[FAILURE] Action '{s_state['last_action']}' for {service} FAILED. Anomaly is still present. Escalating.")
                 # Reset state but could trigger a real alert here
                 s_state["state"] = "HEALTHY" 
                 s_state["last_action_time"] = time.time() # Start a longer cooldown after failure
             else:
-                # Success condition: No recent anomalies for this service
+                # No recent anomalies for this service
                 print(f"[SUCCESS] Action '{s_state['last_action']}' for {service} was successful. Service is now stable.")
                 s_state["state"] = "HEALTHY"
 

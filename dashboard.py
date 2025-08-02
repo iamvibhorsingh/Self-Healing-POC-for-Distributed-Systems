@@ -32,7 +32,6 @@ def fetch_stream_data(r_conn, stream_name, num_entries):
     
     data = []
     for msg_id, msg_data in response:
-        # The actual data is in a key within the message, e.g., 'data' or 'action'
         for key in msg_data:
             try:
                 record = json.loads(msg_data[key])
@@ -56,14 +55,12 @@ def main():
         st.warning("No telemetry data received yet. Please make sure the telemetry_generator is running.")
         st.stop()
 
-    # --- Prepare DataFrames ---
     df = pd.DataFrame(telemetry_data)
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
     df.sort_values('timestamp', inplace=True)
     
     df_anomalies = df[df['is_anomalous'] == True]
 
-    # --- System Health Overview ---
     st.subheader("System Health Overview")
     latest_telemetry = df.drop_duplicates(subset='service_name', keep='last')
     
@@ -87,7 +84,6 @@ def main():
                   title=f"{metric_to_plot.replace('_', ' ').title()} Over Time",
                   markers=False)
     
-    # --- Improve Readability ---
     fig.update_traces(line=dict(width=3))
 
     # Add anomaly markers
@@ -98,10 +94,8 @@ def main():
 
     fig.update_layout(xaxis_title="Time", yaxis_title="Value", legend_title="Service")
     st.plotly_chart(fig, use_container_width=True)
-
-    # --- Recent Actions Log ---
-    st.subheader("Recent Self-Healing Actions")
     
+    st.subheader("Recent Self-Healing Actions")
     actions_placeholder = st.empty()
     
     df_actions = pd.DataFrame(actions_data)

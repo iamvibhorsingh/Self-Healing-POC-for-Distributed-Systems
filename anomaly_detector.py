@@ -16,11 +16,9 @@ TRAINING_WINDOW_SIZE = 50
 MIN_DATA_FOR_TRAINING = 20
 
 # --- State ---
-# Dictionary to store dataframes and models for each service
-service_data = {}
+service_data = {} # Dictionary to store dataframes and models for each service
 
 def get_redis_connection():
-    """Establishes a connection to Redis."""
     return redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 def initialize_stream_and_group(r):
@@ -42,7 +40,6 @@ def process_message(message, r):
         data = json.loads(message["data"])
         service_name = data["service_name"]
         
-        # Initialize storage for a new service
         if service_name not in service_data:
             service_data[service_name] = {
                 "df": pd.DataFrame(columns=["cpu_utilization", "memory_usage", "network_latency", "error_count", "request_count"]),
@@ -50,8 +47,6 @@ def process_message(message, r):
             }
 
         s_data = service_data[service_name]
-        
-        # Append new data
         new_row = pd.DataFrame([data], columns=s_data["df"].columns)
         s_data["df"] = pd.concat([s_data["df"], new_row], ignore_index=True)
 
@@ -61,8 +56,7 @@ def process_message(message, r):
 
         df = s_data["df"]
 
-        # Train the model only once when enough data is collected.
-        if s_data["model"] is None and len(df) >= MIN_DATA_FOR_TRAINING:
+        if s_data["model"] is None and len(df) >= MIN_DATA_FOR_TRAINING:          # Train the model only once when enough data is collected.
             print(f"Collected enough data ({len(df)} points). Training initial model for {service_name}...")
             model = IsolationForest(contamination='auto', random_state=42)
             model.fit(df)
@@ -89,7 +83,6 @@ def process_message(message, r):
         print(f"Error processing message: {e}")
 
 def main():
-    """Main function to detect anomalies."""
     r = get_redis_connection()
     print("Anomaly detector started. Connecting to Redis...")
     r.ping()
@@ -98,7 +91,6 @@ def main():
     
     print("Waiting for telemetry data...")
     while True:
-        # Read from the stream using the consumer group
         messages = r.xreadgroup(
             CONSUMER_GROUP,
             CONSUMER_NAME,
